@@ -3,7 +3,7 @@ metadata 用于储存各种元信息
 
 code错误码一般被用来进行异常传递，且需要具有携带`message`文案信息的能力。
 
-在这里，错误码被设计成`Codes`接口，声明如下[代码位置](https://git.forchange.cn/framework/metacode/code.go)：
+在这里，错误码被设计成`Codes`接口，声明如下：
 
 ```go
 // 错误代码接口,其中包含代码和消息.
@@ -44,9 +44,9 @@ fmt.Println(metacode.OK.Message()) // 输出：很好很强大！
 ### Details
 
 `Details`接口为`gRrc`预留，`gRrc`传递异常会将服务端的错误码pb序列化之后赋值给`Details`，客户端拿到之后反序列化得到，具体可阅读`status`的实现：
-1. `code`包内的`Status`结构体实现了`Codes`接口[代码位置](https://git.forchange.cn/framework/metacode/status.go)
-2. `grpc/status`包内包装了`metacode.Status`和`grpc.Status`进行互相转换的方法[代码位置](https://git.forchange.cn/base/grpc/status/status.go)
-3. `grpc`的`client`和`server`则使用转换方法将`gRrc`底层返回的`error`最终转换为`metacode.Status` [代码位置](https://git.forchange.cn/base/grpc/client.go)
+1. `code`包内的`Status`结构体实现了`Codes`接口
+2. `grpc/status`包内包装了`metacode.Status`和`grpc.Status`进行互相转换的方法
+3. `grpc`的`client`和`server`则使用转换方法将`gRrc`底层返回的`error`最终转换为`metacode.Status` 
 
 
 ## 转换为code
@@ -82,19 +82,4 @@ enum UserErrCode {
 2. 因为protobuf协议限制，第一个enum值必须为无意义的0
 
 
-使用`feo tool protoc --code user.proto`进行生成，生成如下代码：
-
-```go
-package metacode
-
-import (
-    "git.forchange.cn/framework/metacode"
-)
-
-var _ metacode.Codes
-
-// UserErrCode
-var (
-    UserNotLogin = metacode.NewCode(123);
-)
-```
+使用`feo tool protoc --code user.proto`进行生成
