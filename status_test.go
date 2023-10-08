@@ -19,7 +19,7 @@ func TestDetail(t *testing.T) {
 	m := &timestamp.Timestamp{Seconds: time.Now().Unix()}
 	st, _ := Error(RequestErr, "RequestErr").WithDetails(m)
 
-	assert.Equal(t, "RequestErr", st.Message())
+	assert.Equal(t, "RequestErr", st.Message(""))
 	assert.Equal(t, int(RequestErr), st.Code())
 	assert.IsType(t, m, st.Details()[0])
 }
@@ -28,7 +28,7 @@ func TestFromCode(t *testing.T) {
 	err := FromCode(RequestErr)
 
 	assert.Equal(t, int(RequestErr), err.Code())
-	assert.Equal(t, "-400", err.Message())
+	assert.Equal(t, "-400", err.Message(""))
 }
 
 func TestFromProto(t *testing.T) {
@@ -36,12 +36,12 @@ func TestFromProto(t *testing.T) {
 	err := FromProto(msg)
 
 	assert.Equal(t, 2233, err.Code())
-	assert.Equal(t, "error", err.Message())
+	assert.Equal(t, "error", err.Message(""))
 
 	m := &timestamp.Timestamp{Seconds: time.Now().Unix()}
 	err = FromProto(m)
 	assert.Equal(t, -500, err.Code())
-	assert.Contains(t, err.Message(), "invalid proto message get")
+	assert.Contains(t, err.Message(""), "invalid proto message get")
 }
 
 func TestEmpty(t *testing.T) {

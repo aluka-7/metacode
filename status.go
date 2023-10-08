@@ -29,7 +29,7 @@ type Status struct {
 
 // Error implement error
 func (s *Status) Error() string {
-	return s.Message()
+	return s.Message("")
 }
 
 // Code return error code
@@ -38,7 +38,7 @@ func (s *Status) Code() int {
 }
 
 // Message return error message for developer
-func (s *Status) Message() string {
+func (s *Status) Message(_ string) string {
 	if s.s.Message == "" {
 		return strconv.Itoa(int(s.s.Code))
 	}
@@ -51,9 +51,9 @@ func (s *Status) Details() []interface{} {
 		return nil
 	}
 	details := make([]interface{}, 0, len(s.s.Details))
-	for _, any := range s.s.Details {
+	for _, a := range s.s.Details {
 		detail := &ptypes.DynamicAny{}
-		if err := ptypes.UnmarshalAny(any, detail); err != nil {
+		if err := ptypes.UnmarshalAny(a, detail); err != nil {
 			details = append(details, err)
 			continue
 		}
@@ -81,7 +81,7 @@ func (s *Status) Proto() *types.Status {
 
 // FromCode create status from code
 func FromCode(code Code) *Status {
-	return &Status{s: &types.Status{Code: int32(code), Message: code.Message()}}
+	return &Status{s: &types.Status{Code: int32(code), Message: code.Message("")}}
 }
 
 // FromProto new status from gRpc detail

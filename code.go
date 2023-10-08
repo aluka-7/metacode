@@ -29,16 +29,20 @@ var (
 	ValidateErr        = add(-512) // 服务器请求参数校验出错
 )
 var (
-	_messages atomic.Value         // NOTE: stored map[int]string
-	_codes    = map[int]struct{}{} // register codes.
+	_messages = map[string]atomic.Value{} // NOTE: stored map[int]string
+	_codes    = map[int]struct{}{}        // register codes.
 )
 
 // Register register code message map.
-func Register(cm map[int]string) {
-	_messages.Store(cm)
+func Register(l string, cm map[int]string) {
+	if _, ok := _messages[l]; !ok {
+		_messages[l] = atomic.Value{}
+	}
+	m := _messages[l]
+	m.Store(cm)
 }
 
-// 新建一个新的元数据。
+// NewCode 新建一个新的元数据。
 // 注意：代码必须在全局范围内唯一，新代码将检查重复，然后出现恐慌。
 func NewCode(c int) Code {
 	if c <= 0 {
@@ -56,14 +60,15 @@ func add(e int) Code {
 
 // 错误代码接口,其中包含代码和消息.
 type Codes interface {
-	// 有时错误返回字符串形式的代码
+	// Error 有时错误返回字符串形式的代码
 	// 注意：请勿在监控器报告中使用“error”,即使它现在也可以使用
 	Error() string
-	// 获取错误代码.
+	// Code 获取错误代码.
 	Code() int
-	// 获取错误信息.
-	Message() string
-	// 获取错误详细信息,可能为nil.
+	// Message 获取错误信息.
+	// param l string 语言
+	Message(l string) string
+	// Details 获取错误详细信息,可能为nil.
 	Details() []interface{}
 }
 
@@ -78,10 +83,12 @@ func (e Code) Error() string {
 func (e Code) Code() int { return int(e) }
 
 // Message return error message
-func (e Code) Message() string {
-	if cm, ok := _messages.Load().(map[int]string); ok {
-		if msg, ok := cm[e.Code()]; ok {
-			return msg
+func (e Code) Message(l string) string {
+	if m, ok := _messages[l]; ok {
+		if cm, ok := m.Load().(map[int]string); ok {
+			if msg, ok := cm[e.Code()]; ok {
+				return msg
+			}
 		}
 	}
 	return e.Error()
