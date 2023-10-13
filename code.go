@@ -2,10 +2,9 @@ package metacode
 
 import (
 	"fmt"
-	"strconv"
-	"sync/atomic"
-
 	"github.com/pkg/errors"
+	"strconv"
+	"sync"
 )
 
 // All common code
@@ -29,17 +28,13 @@ var (
 	ValidateErr        = add(-512) // 服务器请求参数校验出错
 )
 var (
-	_messages = map[string]atomic.Value{} // NOTE: stored map[int]string
-	_codes    = map[int]struct{}{}        // register codes.
+	_messages sync.Map             // NOTE: stored map[int]string
+	_codes    = map[int]struct{}{} // register codes.
 )
 
 // Register register code message map.
 func Register(l string, cm map[int]string) {
-	if _, ok := _messages[l]; !ok {
-		_messages[l] = atomic.Value{}
-	}
-	m := _messages[l]
-	m.Store(cm)
+	_messages.Store(l, cm)
 }
 
 // NewCode 新建一个新的元数据。
@@ -84,8 +79,8 @@ func (e Code) Code() int { return int(e) }
 
 // Message return error message
 func (e Code) Message(l string) string {
-	if m, ok := _messages[l]; ok {
-		if cm, ok := m.Load().(map[int]string); ok {
+	if m, ok := _messages.Load(l); ok {
+		if cm, ok := m.(map[int]string); ok {
 			if msg, ok := cm[e.Code()]; ok {
 				return msg
 			}
